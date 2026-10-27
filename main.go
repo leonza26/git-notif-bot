@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -17,6 +18,7 @@ import (
 // Di Golang, struct tag `json:"..."` mirip dengan properti array/resource di Laravel.
 type TelegramPayload struct {
 	ChatID                string `json:"chat_id"`
+	MessageThreadID       int    `json:"message_thread_id,omitempty"`
 	Text                  string `json:"text"`
 	ParseMode             string `json:"parse_mode"`
 	DisableWebPagePreview bool   `json:"disable_web_page_preview"`
@@ -227,6 +229,12 @@ func sendTelegramNotification(botToken, chatID, text string) error {
 		Text:                  text,
 		ParseMode:             "HTML",
 		DisableWebPagePreview: true,
+	}
+
+	if topicStr := strings.TrimSpace(os.Getenv("TELEGRAM_TOPIC_ID")); topicStr != "" {
+		if tid, err := strconv.Atoi(topicStr); err == nil && tid > 0 {
+			payload.MessageThreadID = tid
+		}
 	}
 
 	jsonBytes, err := json.Marshal(payload)
